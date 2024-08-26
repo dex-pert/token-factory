@@ -2,24 +2,23 @@
 pragma solidity ^0.8.0;
 
 /**
- *  ____  _______  _______           _     
- * |  _ \| ____\ \/ /_   _|__   ___ | |___ 
- * | | | |  _|  \  /  | |/ _ \ / _ \| / __|
- * | |_| | |___ /  \  | | (_) | (_) | \__ \
- * |____/|_____/_/\_\ |_|\___/ \___/|_|___/
+ *  ____            ____           _   
+ * |  _ \  _____  _|  _ \ ___ _ __| |_ 
+ * | | | |/ _ \ \/ / |_) / _ \ '__| __|
+ * | |_| |  __/>  <|  __/  __/ |  | |_ 
+ * |____/ \___/_/\_\_|   \___|_|   \__|
  *
- * This smart contract was created effortlessly using the DEXTools Token Creator.
+ * This smart contract was created effortlessly using the DexPert Token Creator.
  * 
- * 🌐 Website: https://www.dextools.io/
- * 🐦 Twitter: https://twitter.com/DEXToolsApp
- * 💬 Telegram: https://t.me/DEXToolsCommunity
+ * 🌐 Website: https://www.dexpert.io/
+ * 🐦 Twitter: https://x.com/DexpertOfficial
+ * 💬 Telegram: https://t.me/DexpertCommunity
  * 
- * 🚀 Unleash the power of decentralized finances and tokenization with DEXTools Token Creator. Customize your token seamlessly. Manage your created tokens conveniently from your user panel - start creating your dream token today!
+ * 🚀 Unleash the power of decentralized finances and tokenization with DexPert Token Creator. Customize your token seamlessly. Manage your created tokens conveniently from your user panel - start creating your dream token today!
  */
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { Initializable } from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import { OwnableUpgradeable } from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
-import "hardhat/console.sol";
 
 enum TokenType {
     Standard,
@@ -36,6 +35,17 @@ enum TokenType {
     BabyAntiBot
 }
 
+struct TokenInfo {
+    string name;
+    string symbol;
+    uint8 decimals;
+    uint256 totalSupply;
+    string logoLink;
+    string twitterLink;
+    string telegramLink;
+    string discordLink;
+} 
+
 contract StandardToken is IERC20, Initializable, OwnableUpgradeable {
     uint256 public constant VERSION = 1;
 
@@ -47,6 +57,11 @@ contract StandardToken is IERC20, Initializable, OwnableUpgradeable {
     uint8 private _decimals;
     uint256 private _totalSupply;
 
+    string private _logoLink;
+    string private _twitterLink;
+    string private _telegramLink;
+    string private _discordLink;
+
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
         _disableInitializers();
@@ -54,19 +69,18 @@ contract StandardToken is IERC20, Initializable, OwnableUpgradeable {
 
     function initialize(
         address owner_,
-        string memory name_,
-        string memory symbol_,
-        uint8 decimals_,
-        uint256 totalSupply_
+        TokenInfo memory tokenInfo
     ) public initializer {
-        _name = name_;
-        _symbol = symbol_;
-        _decimals = decimals_;
-        console.log(owner_);
-        console.log(msg.sender);
+        _name = tokenInfo.name;
+        _symbol = tokenInfo.symbol;
+        _decimals = tokenInfo.decimals;
+        _logoLink = tokenInfo.logoLink;
+        _twitterLink = tokenInfo.twitterLink;
+        _telegramLink = tokenInfo.telegramLink;
+        _discordLink = tokenInfo.discordLink;
         __Ownable_init(msg.sender);
         transferOwnership(owner_);
-        _mint(owner(), totalSupply_);
+        _mint(owner(), tokenInfo.totalSupply);
     }
 
     /**

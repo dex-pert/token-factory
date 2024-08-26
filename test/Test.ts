@@ -49,10 +49,17 @@ describe("Lock", function () {
       const decimals = 18
       const totalSupply = 1000000000
       const a = await standardTokenFactory.connect(owner).create(
-        name,
-        symbol,
-        decimals,
-        totalSupply, {value: hre.ethers.parseEther("100")}
+        {
+          name: name,
+          symbol: symbol,
+          decimals: decimals,
+          totalSupply: totalSupply,
+          logoLink: "",
+          twitterLink: "",
+          telegramLink: "",
+          discordLink: ""
+        },
+        {value: hre.ethers.parseEther("100")}
       );
     });
   });
