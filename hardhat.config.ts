@@ -24,8 +24,8 @@ export default {
       allowUnlimitedContractSize: false,
       chainId: 1,
       forking: {
-        url: `https://eth-mainnet.g.alchemy.com/v2/kNPJaYqMx7BA9TcDDJQ8pS5WcLqXGiG7`,
-        // url: `https://rpc.bitlayer.org`,
+        // url: `https://eth-mainnet.g.alchemy.com/v2/kNPJaYqMx7BA9TcDDJQ8pS5WcLqXGiG7`,
+        url: `https://rpc.bitlayer.org`,
       },
     },
     mainnet: {

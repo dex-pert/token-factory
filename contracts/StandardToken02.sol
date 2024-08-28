@@ -19,8 +19,8 @@ pragma solidity ^0.8.0;
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
-import {IUniswapV2Factory} from "./interfaces/IUniswapV2Factory.sol";
-import {IUniswapV2Router02} from "./interfaces/IUniswapV2Router02.sol";
+import {IFactory} from "./interfaces/IFactory.sol";
+import {IRouter02} from "./interfaces/IRouter02.sol";
 import {SafeMath} from "./lib/SafeMath.sol";
 
 enum TokenType {
@@ -76,7 +76,7 @@ contract StandardToken02 is IERC20, Initializable, OwnableUpgradeable {
     string public discordLink;
     string public websiteLink;
     bool public tradingOpen;
-    IUniswapV2Router02 private _router;
+    IRouter02 private _router;
     address private pair;
 
     mapping(address => bool) private _excludeFromTax;
@@ -522,7 +522,7 @@ contract StandardToken02 is IERC20, Initializable, OwnableUpgradeable {
         if (!_tradingOpen) {return;}
         address[] memory path = new address[](2);
         path[0] = address(this);
-        path[1] = _router.WETH();
+        path[1] = _router.WBTC();
         _approve(address(this), address(_router), tokenAmount);
         _router.swapExactTokensForETHSupportingFeeOnTransferTokens(
             tokenAmount,
@@ -546,7 +546,7 @@ contract StandardToken02 is IERC20, Initializable, OwnableUpgradeable {
     }
 
     function openTrading(
-        address uniswapV2Router,
+        address router,
         uint tokenAmount
     ) external payable onlyOwner {
         require(!tradingOpen, "trading is already open");
@@ -563,12 +563,12 @@ contract StandardToken02 is IERC20, Initializable, OwnableUpgradeable {
             "Token transfer failed"
         );
         require(msg.value > 0, "ETH amount must be greater than 0");
-        _router = IUniswapV2Router02(uniswapV2Router);
-        _approve(address(this), uniswapV2Router, tokenAmount);
-        IUniswapV2Factory factory = IUniswapV2Factory(_router.factory());
-        pair = factory.getPair(address(this), _router.WETH());
+        _router = IRouter02(router);
+        _approve(address(this), router, tokenAmount);
+        IFactory factory = IFactory(_router.factory());
+        pair = factory.getPair(address(this), _router.WBTC());
         if (pair == address(0x0)) {
-            pair = factory.createPair(address(this), _router.WETH());
+            pair = factory.createPair(address(this), _router.WBTC());
         }
         _router.addLiquidityETH{value: address(this).balance}(
             address(this),
@@ -578,7 +578,7 @@ contract StandardToken02 is IERC20, Initializable, OwnableUpgradeable {
             owner(),
             block.timestamp
         );
-        IERC20(pair).approve(uniswapV2Router, type(uint).max);
+        IERC20(pair).approve(router, type(uint).max);
         tradingOpen = true;
     }
 

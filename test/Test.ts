@@ -85,8 +85,8 @@ describe("Lock", function () {
       const tokenContract: any = new ethers.Contract(token, StandardTokenJSON.abi)
       // console.log("tokenContract:",tokenContract)
       await tokenContract.connect(owner).approve(token, totalSupply)
-      await tokenContract.connect(owner).openTrading("0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D", totalSupply, { value: hre.ethers.parseEther("1") })
-      // await tokenContract.connect(owner).openTrading("0xb0cc30795f9e0125575742cfa8e73d20d9966f81",totalSupply, {value:  hre.ethers.parseEther("1")})
+      // await tokenContract.connect(owner).openTrading("0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D", totalSupply, { value: hre.ethers.parseEther("1") })
+      await tokenContract.connect(owner).openTrading("0xb0cc30795f9e0125575742cfa8e73d20d9966f81",totalSupply, {value:  hre.ethers.parseEther("1")})
     });
     it("level 1", async function () {
       const { standardToken01, standardToken02, tokenFactoryManager, standardTokenFactory01, standardTokenFactory02, owner } = await loadFixture(deployOneYearLockFixture);
@@ -119,8 +119,8 @@ describe("Lock", function () {
       const tokenContract: any = new ethers.Contract(token, StandardTokenJSON.abi)
       // console.log("tokenContract:",tokenContract)
       await tokenContract.connect(owner).approve(token, totalSupply)
-      await tokenContract.connect(owner).openTrading("0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D", totalSupply, { value: hre.ethers.parseEther("1") })
-      // await tokenContract.connect(owner).openTrading("0xb0cc30795f9e0125575742cfa8e73d20d9966f81",totalSupply, {value:  hre.ethers.parseEther("1")})
+      // await tokenContract.connect(owner).openTrading("0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D", totalSupply, { value: hre.ethers.parseEther("1") })
+      await tokenContract.connect(owner).openTrading("0xb0cc30795f9e0125575742cfa8e73d20d9966f81",totalSupply, {value:  hre.ethers.parseEther("1")})
     });
     it("level 2", async function () {
       const { standardToken01, standardToken02, tokenFactoryManager, standardTokenFactory01, standardTokenFactory02, owner } = await loadFixture(deployOneYearLockFixture);
@@ -145,7 +145,7 @@ describe("Lock", function () {
           discordLink: "",
           websiteLink: ""
         },
-        { value: hre.ethers.parseEther("0.3") }
+        { value: hre.ethers.parseEther("100") }
       );
       const tokens = await tokenFactoryManager.getTokens(owner.address, 0, 1)
       const tokenLength = await tokenFactoryManager.getTokensCount(owner.address);
@@ -153,8 +153,8 @@ describe("Lock", function () {
       const tokenContract: any = new ethers.Contract(token, StandardTokenJSON.abi)
       // console.log("tokenContract:",tokenContract)
       await tokenContract.connect(owner).approve(token, totalSupply)
-      await tokenContract.connect(owner).openTrading("0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D", totalSupply, { value: hre.ethers.parseEther("1") })
-      // await tokenContract.connect(owner).openTrading("0xb0cc30795f9e0125575742cfa8e73d20d9966f81",totalSupply, {value:  hre.ethers.parseEther("1")})
+      // await tokenContract.connect(owner).openTrading("0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D", totalSupply, { value: hre.ethers.parseEther("1") })
+      await tokenContract.connect(owner).openTrading("0xb0cc30795f9e0125575742cfa8e73d20d9966f81",totalSupply, {value:  hre.ethers.parseEther("1")})
     });
   });
 
@@ -202,8 +202,8 @@ describe("Lock", function () {
       const tokenContract: any = new ethers.Contract(token, StandardTokenJSON.abi)
       // console.log("tokenContract:",tokenContract)
       await tokenContract.connect(owner).approve(token, totalSupply)
-      await tokenContract.connect(owner).openTrading("0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D", totalSupply, { value: hre.ethers.parseEther("1") })
-      // await tokenContract.connect(owner).openTrading("0xb0cc30795f9e0125575742cfa8e73d20d9966f81",totalSupply, {value:  hre.ethers.parseEther("1")})
+      // await tokenContract.connect(owner).openTrading("0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D", totalSupply, { value: hre.ethers.parseEther("1") })
+      await tokenContract.connect(owner).openTrading("0xb0cc30795f9e0125575742cfa8e73d20d9966f81",totalSupply, {value:  hre.ethers.parseEther("1")})
     });
     it("level 1", async function () {
       const { standardToken01, standardToken02, tokenFactoryManager, standardTokenFactory01, standardTokenFactory02, owner } = await loadFixture(deployOneYearLockFixture);
@@ -251,8 +251,8 @@ describe("Lock", function () {
       const tokenContract: any = new ethers.Contract(token, StandardTokenJSON.abi)
       // console.log("tokenContract:",tokenContract)
       await tokenContract.connect(owner).approve(token, totalSupply)
-      await tokenContract.connect(owner).openTrading("0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D", totalSupply, { value: hre.ethers.parseEther("1") })
-      // await tokenContract.connect(owner).openTrading("0xb0cc30795f9e0125575742cfa8e73d20d9966f81",totalSupply, {value:  hre.ethers.parseEther("1")})
+      // await tokenContract.connect(owner).openTrading("0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D", totalSupply, { value: hre.ethers.parseEther("1") })
+      await tokenContract.connect(owner).openTrading("0xb0cc30795f9e0125575742cfa8e73d20d9966f81",totalSupply, {value:  hre.ethers.parseEther("1")})
     });
     it("level 2", async function () {
       const { standardToken01, standardToken02, tokenFactoryManager, standardTokenFactory01, standardTokenFactory02, owner } = await loadFixture(deployOneYearLockFixture);
@@ -300,8 +300,8 @@ describe("Lock", function () {
       const tokenContract: any = new ethers.Contract(token, StandardTokenJSON.abi)
       // console.log("tokenContract:",tokenContract)
       await tokenContract.connect(owner).approve(token, totalSupply)
-      await tokenContract.connect(owner).openTrading("0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D", totalSupply, { value: hre.ethers.parseEther("1") })
-      // await tokenContract.connect(owner).openTrading("0xb0cc30795f9e0125575742cfa8e73d20d9966f81",totalSupply, {value:  hre.ethers.parseEther("1")})
+      // await tokenContract.connect(owner).openTrading("0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D", totalSupply, { value: hre.ethers.parseEther("1") })
+      await tokenContract.connect(owner).openTrading("0xb0cc30795f9e0125575742cfa8e73d20d9966f81",totalSupply, {value:  hre.ethers.parseEther("1")})
     });
   });
 });
