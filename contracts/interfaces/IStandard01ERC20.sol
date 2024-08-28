@@ -16,11 +16,11 @@ pragma solidity ^0.8.0;
  * 
  * 🚀 Unleash the power of decentralized finances and tokenization with DexPert Token Creator. Customize your token seamlessly. Manage your created tokens conveniently from your user panel - start creating your dream token today!
  */
-import { TokenInfo } from "../StandardToken.sol";
+import { TokenMetadata } from "../StandardToken01.sol";
 
 interface IStandardERC20 {
     function initialize(
         address owner_,
-        TokenInfo memory TokenInfo
+        TokenMetadata memory tokenMetadata
     ) external;
 }

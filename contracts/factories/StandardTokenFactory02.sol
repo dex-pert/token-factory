@@ -19,16 +19,17 @@ pragma solidity ^0.8.0;
 import { Clones } from "@openzeppelin/contracts/proxy/Clones.sol";
 import { Address } from "@openzeppelin/contracts/utils/Address.sol";
 import { TokenFactoryBase } from "./TokenFactoryBase.sol";
-import { IStandardERC20 } from "../interfaces/IStandardERC20.sol";
-import { TokenInfo } from "../StandardToken.sol";
+import { IStandardERC20 } from "../interfaces/IStandard01ERC20.sol";
+import { TokenMetadata } from "../StandardToken01.sol";
 
-contract StandardTokenFactory is TokenFactoryBase {
+contract StandardTokenFactory01 is TokenFactoryBase {
     using Address for address payable;
     constructor(
         address factoryManager_,
         address implementation_,
         address feeTo_,
         uint256 flatFee_,
+        uint256 proxyFee_,
         uint256 maxFee_
     )
         TokenFactoryBase(
@@ -36,21 +37,31 @@ contract StandardTokenFactory is TokenFactoryBase {
             implementation_,
             feeTo_,
             flatFee_,
+            proxyFee_,
             maxFee_
         )
     {}
 
     function create(
-        TokenInfo calldata tokenInfo
+        uint256 level,
+        TokenMetadata calldata tokenMetadata
     ) external payable enoughFee nonReentrant returns (address token) {
-        refundExcessiveFee();
-        payable(feeTo).sendValue(flatFee);
-        token = Clones.cloneDeterministic(implementation, keccak256(abi.encodePacked(msg.sender, tokenInfo.name, tokenInfo.symbol, tokenInfo.decimals, tokenInfo.totalSupply, tokenInfo.logoLink)));
+        require(level == 0 || level == 1 || level == 2, "Invalid Level");
+        if (level == 1) {
+            refundExcessiveFlatFee();
+            payable(feeTo).sendValue(flatFee);
+        } else if (level == 2) {
+            refundExcessiveProxyFee();
+            payable(feeTo).sendValue(proxyFee);
+        } else {
+            payable(msg.sender).sendValue(msg.value);
+        }
+        token = Clones.cloneDeterministic(implementation, keccak256(abi.encodePacked(msg.sender, tokenMetadata.name, tokenMetadata.symbol, tokenMetadata.decimals, tokenMetadata.totalSupply)));
         IStandardERC20(token).initialize(
             msg.sender,
-            tokenInfo
+            tokenMetadata
         );
-        assignTokenToOwner(msg.sender, token, 0);
-        emit TokenCreated(msg.sender, token, 0, implementationVersion);
+        assignTokenToOwner(msg.sender, token, 1);
+        emit TokenCreated(msg.sender, token, 1, implementationVersion);
     }
 }

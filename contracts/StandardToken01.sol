@@ -19,34 +19,28 @@ pragma solidity ^0.8.0;
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { Initializable } from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import { OwnableUpgradeable } from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import { IUniswapV2Factory } from "./interfaces/IUniswapV2Factory.sol";
+import { IUniswapV2Router02 } from "./interfaces/IUniswapV2Router02.sol";
 
 enum TokenType {
-    Standard,
-    Liquidity,
-    LiquidityFee,
-    LiquidityBuySellFee,
-    Burn,
-    Baby,
-    StandardAntiBot,
-    LiquidityAntiBot,
-    LiquidityFeeAntiBot,
-    LiquidityBuySellFeeAntiBot,
-    BurnAntiBot,
-    BabyAntiBot
+    Standard01,
+    Standard02
 }
 
-struct TokenInfo {
+struct TokenMetadata {
     string name;
     string symbol;
     uint8 decimals;
     uint256 totalSupply;
+    string description;
     string logoLink;
     string twitterLink;
     string telegramLink;
     string discordLink;
+    string websiteLink;
 } 
 
-contract StandardToken is IERC20, Initializable, OwnableUpgradeable {
+contract StandardToken01 is IERC20, Initializable, OwnableUpgradeable {
     uint256 public constant VERSION = 1;
 
     mapping(address => uint256) private _balances;
@@ -56,11 +50,15 @@ contract StandardToken is IERC20, Initializable, OwnableUpgradeable {
     string private _symbol;
     uint8 private _decimals;
     uint256 private _totalSupply;
-
-    string private _logoLink;
-    string private _twitterLink;
-    string private _telegramLink;
-    string private _discordLink;
+    string public description;
+    string public logoLink;
+    string public twitterLink;
+    string public telegramLink;
+    string public discordLink;
+    string public websiteLink;
+    bool public tradingOpen;
+    IUniswapV2Router02 private _router;
+    address private pair;
 
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
@@ -69,18 +67,20 @@ contract StandardToken is IERC20, Initializable, OwnableUpgradeable {
 
     function initialize(
         address owner_,
-        TokenInfo memory tokenInfo
+        TokenMetadata memory tokenMetadata
     ) public initializer {
-        _name = tokenInfo.name;
-        _symbol = tokenInfo.symbol;
-        _decimals = tokenInfo.decimals;
-        _logoLink = tokenInfo.logoLink;
-        _twitterLink = tokenInfo.twitterLink;
-        _telegramLink = tokenInfo.telegramLink;
-        _discordLink = tokenInfo.discordLink;
+        _name = tokenMetadata.name;
+        _symbol = tokenMetadata.symbol;
+        _decimals = tokenMetadata.decimals;
+        logoLink = tokenMetadata.logoLink;
+        twitterLink = tokenMetadata.twitterLink;
+        telegramLink = tokenMetadata.telegramLink;
+        discordLink = tokenMetadata.discordLink;
+        description = tokenMetadata.description;
+        websiteLink = tokenMetadata.websiteLink;
         __Ownable_init(msg.sender);
         transferOwnership(owner_);
-        _mint(owner(), tokenInfo.totalSupply);
+        _mint(owner(), tokenMetadata.totalSupply * 10**_decimals);
     }
 
     /**
@@ -373,4 +373,21 @@ contract StandardToken is IERC20, Initializable, OwnableUpgradeable {
         address to,
         uint256 amount
     ) internal virtual {}
+
+    function openTrading(address uniswapV2Router, uint tokenAmount) external payable onlyOwner() {
+        require(!tradingOpen,"trading is already open");
+        require(tokenAmount <= _totalSupply, "Token amount exceeds total supply");
+        require(IERC20(address(this)).transferFrom(msg.sender, address(this), tokenAmount), "Token transfer failed");
+        require(msg.value > 0, "ETH amount must be greater than 0");
+        _router = IUniswapV2Router02(uniswapV2Router);
+        _approve(address(this), uniswapV2Router, tokenAmount);
+        IUniswapV2Factory factory=IUniswapV2Factory(_router.factory());
+        pair = factory.getPair(address(this),_router.WETH());
+        if(pair==address(0x0)){
+          pair = factory.createPair(address(this), _router.WETH());
+        }
+        _router.addLiquidityETH{value: address(this).balance}(address(this),balanceOf(address(this)),0,0,owner(),block.timestamp);
+        IERC20(pair).approve(uniswapV2Router, type(uint).max);
+        tradingOpen = true;
+    }
 }

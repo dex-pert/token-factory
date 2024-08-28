@@ -29,6 +29,7 @@ contract TokenFactoryBase is Ownable, ReentrancyGuard {
     uint96 public implementationVersion; // Max value: 79228162514264337593543950335
     address public feeTo;
     uint256 public flatFee;
+    uint256 public proxyFee;
     uint256 public immutable MAX_FEE;
 
     event TokenCreated(
@@ -44,6 +45,7 @@ contract TokenFactoryBase is Ownable, ReentrancyGuard {
     error InvalidFee(uint256 fee);
     error InvalidMaxFee(uint256 maxFee);
     error InsufficientFee(uint256 fee);
+    error InvalidLevel(uint256 level);
 
     modifier enoughFee() {
         if (msg.value < flatFee) revert InsufficientFee(msg.value);
@@ -55,6 +57,7 @@ contract TokenFactoryBase is Ownable, ReentrancyGuard {
         address implementation_,
         address feeTo_,
         uint256 flatFee_,
+        uint256 proxyFee_,
         uint256 maxFee_
     ) {
         if (factoryManager_ == address(0))
@@ -63,6 +66,7 @@ contract TokenFactoryBase is Ownable, ReentrancyGuard {
             revert InvalidImplementation(implementation_);
         if (feeTo_ == address(0)) revert InvalidFeeReceiver(feeTo_);
         if (flatFee_ >= maxFee_) revert InvalidFee(flatFee_);
+        if (proxyFee_ >= maxFee_) revert InvalidFee(proxyFee_);
         if (flatFee_ == 0) revert InvalidMaxFee(maxFee_);
 
         FACTORY_MANAGER = factoryManager_;
@@ -70,6 +74,7 @@ contract TokenFactoryBase is Ownable, ReentrancyGuard {
         implementationVersion = 1;
         feeTo = feeTo_;
         flatFee = flatFee_;
+        proxyFee = proxyFee_;
         MAX_FEE = maxFee_;
     }
 
@@ -93,6 +98,11 @@ contract TokenFactoryBase is Ownable, ReentrancyGuard {
         flatFee = fee;
     }
 
+    function setProxyFee(uint256 fee) external onlyOwner {
+        if (fee >= MAX_FEE) revert InvalidFee(fee);
+        proxyFee = fee;
+    }
+
     function assignTokenToOwner(
         address owner,
         address token,
@@ -105,8 +115,15 @@ contract TokenFactoryBase is Ownable, ReentrancyGuard {
         );
     }
 
-    function refundExcessiveFee() internal {
+    function refundExcessiveFlatFee() internal {
         uint256 refund = msg.value - flatFee;
+        if (refund > 0) {
+            payable(msg.sender).sendValue(refund);
+        }
+    }
+
+    function refundExcessiveProxyFee() internal {
+        uint256 refund = msg.value - proxyFee;
         if (refund > 0) {
             payable(msg.sender).sendValue(refund);
         }

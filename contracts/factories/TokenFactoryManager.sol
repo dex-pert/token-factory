@@ -19,7 +19,6 @@ pragma solidity ^0.8.0;
 import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 import { EnumerableSet } from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 import { IFactoryManager } from "../interfaces/IFactoryManager.sol";
-import "hardhat/console.sol";
 
 contract TokenFactoryManager is Ownable, IFactoryManager {
     using EnumerableSet for EnumerableSet.AddressSet;
@@ -65,7 +64,6 @@ contract TokenFactoryManager is Ownable, IFactoryManager {
         address token,
         uint8 tokenType
     ) external override onlyAllowedFactory {
-        console.log("-----------assignTokensToOwner------------");
         if (isGenerated[token]) revert TokenAlreadyExists(owner, token);
         tokensOf[owner].push(Token(tokenType, token));
         tokensByType[owner][tokenType].push(token);
