@@ -46,7 +46,7 @@ contract StandardToken01 is IStandardToken01, Initializable, OwnableUpgradeable 
     TokenMetaData public tokenMetaData;
     bool public tradingOpen;
     IRouter02 private _router;
-    address private pair;
+    address public pair;
 
     event TradingOpened(address uniswapV2Router, uint tokenAmount, uint ethAmount);
     

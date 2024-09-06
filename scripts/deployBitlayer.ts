@@ -15,17 +15,17 @@ async function main() {
   // const standardToken01 = await StandardToken01.deploy();
   // const standardToken01Address = standardToken01.address
   // console.log("standardTokenAddress 01:", standardToken01Address)
-const standardToken01Address = "0x026760DCdAE6F357984cF27136C2f05EAC4C4f99"
+const standardToken01Address = "0x5e57b4e054A058CD3f69d7626eAe6ba2c1df8162"
 
   // const TokenFactoryManager = await hre.ethers.getContractFactory("TokenFactoryManager");
   // const tokenFactoryManager = await TokenFactoryManager.deploy();
   // const tokenFactoryManagerAddress = tokenFactoryManager.address
   // console.log("tokenFactoryManagerAddress:", tokenFactoryManagerAddress)
-const tokenFactoryManagerAddress = "0xFf18C40239fc459E0a856c311d49c9041267D5ee"
+const tokenFactoryManagerAddress = "0xd12edb3B94f6Adfed3E223ABb9d95C6AC0C46175"
 
   const feeToAddress = "0x7002421C457b83425293DE5a7BFEB68B01A6f693"
 
-  //0x87C0C18C01E425CDc5223291a8c7c1Aa5b9C9a49
+  // 0x87C0C18C01E425CDc5223291a8c7c1Aa5b9C9a49
   const StandardTokenFactory01 = await hre.ethers.getContractFactory("StandardTokenFactory01");
   const standardTokenFactory01 = await StandardTokenFactory01.deploy( 
     tokenFactoryManagerAddress,
