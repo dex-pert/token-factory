@@ -2,64 +2,59 @@
 pragma solidity ^0.8.0;
 
 /**
- *  ____            ____           _   
- * |  _ \  _____  _|  _ \ ___ _ __| |_ 
- * | | | |/ _ \ \/ / |_) / _ \ '__| __|
- * | |_| |  __/>  <|  __/  __/ |  | |_ 
- * |____/ \___/_/\_\_|   \___|_|   \__|
  *
- * This smart contract was created effortlessly using the DexPert Token Creator.
+ * /$$$$$$$                                                      /$$    
+ *| $$__  $$                                                    | $$    
+ *| $$  \ $$  /$$$$$$  /$$   /$$  /$$$$$$   /$$$$$$   /$$$$$$  /$$$$$$  
+ *| $$  | $$ /$$__  $$|  $$ /$$/ /$$__  $$ /$$__  $$ /$$__  $$|_  $$_/  
+ *| $$  | $$| $$$$$$$$ \  $$$$/ | $$  \ $$| $$$$$$$$| $$  \__/  | $$    
+ *| $$  | $$| $$_____/  >$$  $$ | $$  | $$| $$_____/| $$        | $$ /$$
+ *| $$$$$$$/|  $$$$$$$ /$$/\  $$| $$$$$$$/|  $$$$$$$| $$        |  $$$$/
+ *|_______/  \_______/|__/  \__/| $$____/  \_______/|__/         \___/  
+ *                             | $$                                    
+ *                             | $$                                    
+ *                            |__/                                    
+ *
+ * This smart contract was created effortlessly using the Dexpert Token Creator.
  * 
- * 🌐 Website: https://www.dexpert.io/
+ * 🌐 Website: https://dexpert.io/
  * 🐦 Twitter: https://x.com/DexpertOfficial
  * 💬 Telegram: https://t.me/DexpertCommunity
  * 
- * 🚀 Unleash the power of decentralized finances and tokenization with DexPert Token Creator. Customize your token seamlessly. Manage your created tokens conveniently from your user panel - start creating your dream token today!
+ * 🚀 Unleash the power of decentralized finances and tokenization with Dexpert Token Creator. Customize your token seamlessly. Manage your created tokens conveniently from your user panel - start creating your dream token today!
  */
-import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { Initializable } from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import { OwnableUpgradeable } from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import { IFactory } from "./interfaces/IFactory.sol";
 import { IRouter02 } from "./interfaces/IRouter02.sol";
-import "hardhat/console.sol";
+import "./interfaces/IStandardToken01.sol";
+import { TokenInitializeParams, TokenMetaData } from "./lib/TokenFactoryStructs.sol";
 
-enum TokenType {
-    Standard01,
-    Standard02
-}
-
-struct TokenMetadata {
-    string name;
-    string symbol;
-    uint8 decimals;
-    uint256 totalSupply;
-    string description;
-    string logoLink;
-    string twitterLink;
-    string telegramLink;
-    string discordLink;
-    string websiteLink;
-} 
-
-contract StandardToken01 is IERC20, Initializable, OwnableUpgradeable {
+contract StandardToken01 is IStandardToken01, Initializable, OwnableUpgradeable {
     uint256 public constant VERSION = 1;
 
     mapping(address => uint256) private _balances;
     mapping(address => mapping(address => uint256)) private _allowances;
 
+    /// @notice Track the allowed factory addresses.
+    mapping(address => bool) internal _allowedFactory;
+
     string private _name;
     string private _symbol;
     uint8 private _decimals;
     uint256 private _totalSupply;
-    string public description;
-    string public logoLink;
-    string public twitterLink;
-    string public telegramLink;
-    string public discordLink;
-    string public websiteLink;
+    TokenMetaData public tokenMetaData;
     bool public tradingOpen;
     IRouter02 private _router;
     address private pair;
+
+    event TradingOpened(address uniswapV2Router, uint tokenAmount, uint ethAmount);
+    
+    function _onlyAllowedFactory(address factory) internal view {
+        if (_allowedFactory[factory] != true) {
+            revert OnlyAllowedFactory();
+        }
+    }
 
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
@@ -68,20 +63,25 @@ contract StandardToken01 is IERC20, Initializable, OwnableUpgradeable {
 
     function initialize(
         address owner_,
-        TokenMetadata memory tokenMetadata
-    ) public initializer {
-        _name = tokenMetadata.name;
-        _symbol = tokenMetadata.symbol;
-        _decimals = tokenMetadata.decimals;
-        logoLink = tokenMetadata.logoLink;
-        twitterLink = tokenMetadata.twitterLink;
-        telegramLink = tokenMetadata.telegramLink;
-        discordLink = tokenMetadata.discordLink;
-        description = tokenMetadata.description;
-        websiteLink = tokenMetadata.websiteLink;
-        __Ownable_init(msg.sender);
+        address factory,
+        TokenInitializeParams memory tokenInitializeParams
+    ) external virtual override initializer {
+        _name = tokenInitializeParams.name;
+        _symbol = tokenInitializeParams.symbol;
+        _decimals = tokenInitializeParams.decimals;
+        tokenMetaData = TokenMetaData({
+            logoLink: tokenInitializeParams.logoLink,
+            twitterLink: tokenInitializeParams.twitterLink,
+            telegramLink: tokenInitializeParams.telegramLink,
+            discordLink: tokenInitializeParams.discordLink,
+            description: tokenInitializeParams.description,
+            websiteLink: tokenInitializeParams.websiteLink
+        });
+        _allowedFactory[factory] = true;
+        
+        __Ownable_init();
         transferOwnership(owner_);
-        _mint(owner(), tokenMetadata.totalSupply * 10**_decimals);
+        _mint(owner(), tokenInitializeParams.totalSupply * 10**_decimals);
     }
 
     /**
@@ -271,11 +271,12 @@ contract StandardToken01 is IERC20, Initializable, OwnableUpgradeable {
     ) internal virtual {
         require(sender != address(0), "ERC20: transfer from the zero address");
         require(recipient != address(0), "ERC20: transfer to the zero address");
+        require(_balances[sender] >= amount, "ERC20: transfer amount exceeds balance");
 
         _beforeTokenTransfer(sender, recipient, amount);
 
-        _balances[sender] = _balances[sender] - amount;
-        _balances[recipient] = _balances[recipient] + amount;
+        _balances[sender] -= amount;
+        _balances[recipient] += amount;
         emit Transfer(sender, recipient, amount);
     }
 
@@ -375,20 +376,58 @@ contract StandardToken01 is IERC20, Initializable, OwnableUpgradeable {
         uint256 amount
     ) internal virtual {}
 
-    function openTrading(address router, uint tokenAmount) external payable onlyOwner() {
+    /**
+     * @dev Open Trading
+     */
+    function openTrading(
+        address uniswapV2Router, 
+        uint tokenAmount
+    ) external payable onlyOwner {
         require(!tradingOpen,"trading is already open");
         require(tokenAmount <= _totalSupply, "Token amount exceeds total supply");
+
+        // Transfer tokens to this contract
         require(IERC20(address(this)).transferFrom(msg.sender, address(this), tokenAmount), "Token transfer failed");
+
+        // Ensure ETH is sent with the transaction
         require(msg.value > 0, "ETH amount must be greater than 0");
-        _router = IRouter02(router);
-        _approve(address(this), router, tokenAmount);
+
+        _router = IRouter02(uniswapV2Router);
+        _approve(address(this), uniswapV2Router, tokenAmount);
         IFactory factory=IFactory(_router.factory());
         pair = factory.getPair(address(this),_router.WBTC());
+
+        // Create pair if it doesn't exist
         if(pair==address(0x0)){
           pair = factory.createPair(address(this), _router.WBTC());
         }
-        _router.addLiquidityETH{value: address(this).balance}(address(this),balanceOf(address(this)),0,0,owner(),block.timestamp);
-        IERC20(pair).approve(router, type(uint).max);
+
+        // Add liquidity
+        uint256 tokenBalance = balanceOf(address(this));
+        _router.addLiquidityETH{value: address(this).balance}(
+            address(this),
+            tokenBalance,
+            0,
+            0,
+            owner(),
+            block.timestamp
+        );
+
+        IERC20(pair).approve(uniswapV2Router, type(uint).max);
+        
         tradingOpen = true;
+
+        emit TradingOpened(uniswapV2Router, tokenAmount, address(this).balance);
+    }
+
+    /**
+     * @dev Update Token Meta Data
+     */
+    function updateTokenMetaData(
+        TokenMetaData memory tokenMetaData_
+    ) external virtual override {
+        // Ensure the factory is allowed.
+        _onlyAllowedFactory(msg.sender);
+        tokenMetaData = tokenMetaData_;
     }
 }

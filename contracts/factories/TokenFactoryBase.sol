@@ -2,24 +2,32 @@
 pragma solidity ^0.8.0;
 
 /**
- *  ____            ____           _   
- * |  _ \  _____  _|  _ \ ___ _ __| |_ 
- * | | | |/ _ \ \/ / |_) / _ \ '__| __|
- * | |_| |  __/>  <|  __/  __/ |  | |_ 
- * |____/ \___/_/\_\_|   \___|_|   \__|
  *
- * This smart contract was created effortlessly using the DexPert Token Creator.
+ * /$$$$$$$                                                      /$$    
+ *| $$__  $$                                                    | $$    
+ *| $$  \ $$  /$$$$$$  /$$   /$$  /$$$$$$   /$$$$$$   /$$$$$$  /$$$$$$  
+ *| $$  | $$ /$$__  $$|  $$ /$$/ /$$__  $$ /$$__  $$ /$$__  $$|_  $$_/  
+ *| $$  | $$| $$$$$$$$ \  $$$$/ | $$  \ $$| $$$$$$$$| $$  \__/  | $$    
+ *| $$  | $$| $$_____/  >$$  $$ | $$  | $$| $$_____/| $$        | $$ /$$
+ *| $$$$$$$/|  $$$$$$$ /$$/\  $$| $$$$$$$/|  $$$$$$$| $$        |  $$$$/
+ *|_______/  \_______/|__/  \__/| $$____/  \_______/|__/         \___/  
+ *                             | $$                                    
+ *                             | $$                                    
+ *                            |__/                                    
+ *
+ * This smart contract was created effortlessly using the Dexpert Token Creator.
  * 
- * 🌐 Website: https://www.dexpert.io/
+ * 🌐 Website: https://dexpert.io/
  * 🐦 Twitter: https://x.com/DexpertOfficial
  * 💬 Telegram: https://t.me/DexpertCommunity
  * 
- * 🚀 Unleash the power of decentralized finances and tokenization with DexPert Token Creator. Customize your token seamlessly. Manage your created tokens conveniently from your user panel - start creating your dream token today!
+ * 🚀 Unleash the power of decentralized finances and tokenization with Dexpert Token Creator. Customize your token seamlessly. Manage your created tokens conveniently from your user panel - start creating your dream token today!
  */
 import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 import { Address } from "@openzeppelin/contracts/utils/Address.sol";
 import { ReentrancyGuard } from "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import { IFactoryManager } from "../interfaces/IFactoryManager.sol";
+import { TokenMetaData } from "../lib/TokenFactoryStructs.sol";
 
 contract TokenFactoryBase is Ownable, ReentrancyGuard {
     using Address for address payable;
@@ -28,17 +36,20 @@ contract TokenFactoryBase is Ownable, ReentrancyGuard {
     address public implementation;
     uint96 public implementationVersion; // Max value: 79228162514264337593543950335
     address public feeTo;
-    uint256 public flatFee;
-    uint256 public proxyFee;
+    mapping(uint256 => uint256) public fees;
     uint256 public immutable MAX_FEE;
 
     event TokenCreated(
         address indexed owner,
         address indexed token,
         uint8 tokenType,
-        uint96 tokenVersion
+        uint96 tokenVersion,
+        uint256 level
     );
-
+    event FeeToUpdated(address newFeeTo);
+    event FeeUpdated(uint256 level, uint256 newFee);
+    event TokenMetaDataUpdated(TokenMetaData tokenMetaData);
+    event LevelsUpdated(uint256[] newLevels);
     error InvalidFactoryManager(address implementation);
     error InvalidImplementation(address factoryManager);
     error InvalidFeeReceiver(address receiver);
@@ -46,9 +57,10 @@ contract TokenFactoryBase is Ownable, ReentrancyGuard {
     error InvalidMaxFee(uint256 maxFee);
     error InsufficientFee(uint256 fee);
     error InvalidLevel(uint256 level);
+    error OnlyOwner();
 
-    modifier enoughFee() {
-        if (msg.value < flatFee) revert InsufficientFee(msg.value);
+    modifier enoughFee(uint256 level) {
+        if (msg.value < fees[level]) revert InsufficientFee(msg.value);
         _;
     }
 
@@ -56,8 +68,6 @@ contract TokenFactoryBase is Ownable, ReentrancyGuard {
         address factoryManager_,
         address implementation_,
         address feeTo_,
-        uint256 flatFee_,
-        uint256 proxyFee_,
         uint256 maxFee_
     ) {
         if (factoryManager_ == address(0))
@@ -65,42 +75,37 @@ contract TokenFactoryBase is Ownable, ReentrancyGuard {
         if (implementation_ == address(0))
             revert InvalidImplementation(implementation_);
         if (feeTo_ == address(0)) revert InvalidFeeReceiver(feeTo_);
-        if (flatFee_ >= maxFee_) revert InvalidFee(flatFee_);
-        if (proxyFee_ >= maxFee_) revert InvalidFee(proxyFee_);
-        if (flatFee_ == 0) revert InvalidMaxFee(maxFee_);
 
         FACTORY_MANAGER = factoryManager_;
         implementation = implementation_;
         implementationVersion = 1;
         feeTo = feeTo_;
-        flatFee = flatFee_;
-        proxyFee = proxyFee_;
         MAX_FEE = maxFee_;
+    }
+
+    function setFee(uint256 level, uint256 fee) external onlyOwner {
+        if (fee >= MAX_FEE) revert InvalidFee(fee);
+        fees[level] = fee;
+        emit FeeUpdated(level, fee);
     }
 
     function setImplementation(address implementation_) external onlyOwner {
         if (implementation_ == address(0) || implementation_ == address(this))
             revert InvalidImplementation(implementation_);
+        require(Address.isContract(implementation_), "New implementation must be a contract");
+
         implementation = implementation_;
         ++implementationVersion;
     }
 
-    function setFeeTo(address feeReceivingAddress) external onlyOwner {
+    function setFeeTo(address feeTo_) external onlyOwner {
         if (
-            feeReceivingAddress == address(0) ||
-            feeReceivingAddress == address(this)
-        ) revert InvalidFeeReceiver(feeReceivingAddress);
-        feeTo = feeReceivingAddress;
-    }
-
-    function setFlatFee(uint256 fee) external onlyOwner {
-        if (fee >= MAX_FEE) revert InvalidFee(fee);
-        flatFee = fee;
-    }
-
-    function setProxyFee(uint256 fee) external onlyOwner {
-        if (fee >= MAX_FEE) revert InvalidFee(fee);
-        proxyFee = fee;
+            feeTo_ == address(0) ||
+            feeTo_ == address(this)
+        ) revert InvalidFeeReceiver(feeTo_);
+        
+        feeTo = feeTo_;
+        emit FeeToUpdated(feeTo);
     }
 
     function assignTokenToOwner(
@@ -115,17 +120,10 @@ contract TokenFactoryBase is Ownable, ReentrancyGuard {
         );
     }
 
-    function refundExcessiveFlatFee() internal {
-        uint256 refund = msg.value - flatFee;
+    function refundExcessiveFee(uint256 level) internal {
+        uint256 refund = msg.value - fees[level];
         if (refund > 0) {
-            payable(msg.sender).sendValue(refund);
-        }
-    }
-
-    function refundExcessiveProxyFee() internal {
-        uint256 refund = msg.value - proxyFee;
-        if (refund > 0) {
-            payable(msg.sender).sendValue(refund);
+            Address.sendValue(payable(msg.sender),refund);
         }
     }
 }
