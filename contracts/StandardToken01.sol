@@ -25,11 +25,10 @@ pragma solidity ^0.8.0;
  */
 import { Initializable } from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import { OwnableUpgradeable } from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
-import { IUniswapV2Factory } from "./interfaces/IUniswapV2Factory.sol";
-import { IUniswapV2Router02 } from "./interfaces/IUniswapV2Router02.sol";
+import { ISwappiFactory } from "./interfaces/ISwappiFactory.sol";
+import { ISwappiRouter02 } from "./interfaces/ISwappiRouter02.sol";
 import "./interfaces/IStandardToken01.sol";
 import { TokenInitializeParams, TokenMetaData } from "./lib/TokenFactoryStructs.sol";
-import "hardhat/console.sol";
 
 contract StandardToken01 is IStandardToken01, Initializable, OwnableUpgradeable {
     uint256 public constant VERSION = 1;
@@ -46,7 +45,7 @@ contract StandardToken01 is IStandardToken01, Initializable, OwnableUpgradeable 
     uint256 private _totalSupply;
     TokenMetaData public tokenMetaData;
     bool public tradingOpen;
-    IUniswapV2Router02 private _router;
+    ISwappiRouter02 private _router;
     address public pair;
 
     event TradingOpened(address uniswapV2Router, uint tokenAmount, uint ethAmount);
@@ -394,10 +393,10 @@ contract StandardToken01 is IStandardToken01, Initializable, OwnableUpgradeable 
         // Ensure ETH is sent with the transaction
         require(msg.value > 0, "ETH amount must be greater than 0");
         
-        _router = IUniswapV2Router02(uniswapV2Router);
+        _router = ISwappiRouter02(uniswapV2Router);
         _approve(address(this), uniswapV2Router, tokenAmount);
 
-        IUniswapV2Factory factory=IUniswapV2Factory(_router.factory());
+        ISwappiFactory factory=ISwappiFactory(_router.factory());
         pair = factory.getPair(address(this),_router.WETH());
 
         // Create pair if it doesn't exist
