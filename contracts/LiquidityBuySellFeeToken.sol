@@ -161,7 +161,7 @@ contract LiquidityBuySellFeeToken is IERC20, Initializable, OwnableUpgradeable {
         swapAndLiquifyEnabled = true;
 
         // Set the owner to the factory initializer caller
-        __Ownable_init(msg.sender);
+        __Ownable_init();
         transferOwnership(owner_);
 
         _rOwned[owner()] = _rTotal;

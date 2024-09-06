@@ -18,7 +18,7 @@ pragma solidity ^0.8.0;
  */
 import { TokenMetadata } from "../StandardToken02.sol";
 
-interface IStandardERC20 {
+interface IStandard02ERC20 {
     function initialize(
         address owner_,
         TokenMetadata memory tokenMetadata

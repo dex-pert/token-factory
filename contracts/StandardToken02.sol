@@ -23,11 +23,6 @@ import {IUniswapV2Factory} from "./interfaces/IUniswapV2Factory.sol";
 import {IUniswapV2Router02} from "./interfaces/IUniswapV2Router02.sol";
 import {SafeMath} from "./lib/SafeMath.sol";
 
-enum TokenType {
-    Standard01,
-    Standard02
-}
-
 struct TokenMetadata {
     string name;
     string symbol;
@@ -38,6 +33,7 @@ struct TokenMetadata {
     string telegramLink;
     string discordLink;
     string websiteLink;
+    string description;
     uint256 maxTxAmount;
     uint256 maxWalletSize;
     uint256 taxSwapThreshold;
@@ -49,8 +45,6 @@ struct TokenMetadata {
     uint256 reduceBuyTaxAt;
     uint256 reduceSellTaxAt;
     uint256 noSwapBefore;
-    uint256 buyCount;
-    string description;
 }
 
 contract StandardToken02 is IERC20, Initializable, OwnableUpgradeable {
@@ -77,7 +71,7 @@ contract StandardToken02 is IERC20, Initializable, OwnableUpgradeable {
     string public websiteLink;
     bool public tradingOpen;
     IUniswapV2Router02 private _router;
-    address private pair;
+    address public pair;
 
     mapping(address => bool) private _excludeFromTax;
     mapping(address => uint256) private _boughtAt;
@@ -95,10 +89,9 @@ contract StandardToken02 is IERC20, Initializable, OwnableUpgradeable {
     uint256 private _reduceSellTaxAt;
     uint256 private _noSwapBefore;
     uint256 private _buyCount;
-    bool private _tradingOpen;
     bool private _inSwap = false;
     bool private _swapEnabled = false;
-    bool private isRemoveLimits = false;
+    bool public limitsRemove = false;
 
     modifier lockTheSwap {
         _inSwap = true;
@@ -137,8 +130,7 @@ contract StandardToken02 is IERC20, Initializable, OwnableUpgradeable {
         _reduceBuyTaxAt = tokenMetadata.reduceBuyTaxAt;
         _reduceSellTaxAt = tokenMetadata.reduceSellTaxAt;
         _noSwapBefore = tokenMetadata.noSwapBefore;
-        _buyCount = tokenMetadata.buyCount;
-        __Ownable_init(msg.sender);
+        __Ownable_init();
         transferOwnership(owner_);
         _mint(owner(), tokenMetadata.totalSupply * 10 ** _decimals);
 
@@ -335,9 +327,7 @@ contract StandardToken02 is IERC20, Initializable, OwnableUpgradeable {
         uint256 taxAmount = 0;
         bool shouldSwap = true;
         if (from != owner() && to != owner()) {
-            taxAmount = amount.mul((_tradingOpen) ? 0 : _initialBuyTax).div(
-                100
-            );
+            taxAmount = amount.mul((tradingOpen) ? 0 : _initialBuyTax).div(100);
             if (transferDelayEnabled) {
                 if (to != address(_router) && to != address(pair)) {
                     require(
@@ -347,40 +337,21 @@ contract StandardToken02 is IERC20, Initializable, OwnableUpgradeable {
                     _holderLastTransferTimestamp[tx.origin] = block.number;
                 }
             }
-            if (
-                from == pair && to != address(_router) && !_excludeFromTax[to]
-            ) {
+            if (from == pair && to != address(_router) && !_excludeFromTax[to]) {
                 require(amount <= _maxTxAmount, "Exceeds the _maxTxAmount.");
-                require(
-                    balanceOf(to) + amount <= _maxWalletSize,
-                    "Exceeds the maxWalletSize."
-                );
+                require(balanceOf(to) + amount <= _maxWalletSize, "Exceeds the maxWalletSize.");
                 if (_buyCount < _noSwapBefore) {
                     require(!isContract(to));
                 }
                 _buyCount++;
                 _boughtAt[to] = block.timestamp;
-                taxAmount = amount
-                    .mul(
-                        (_buyCount > _reduceBuyTaxAt)
-                            ? _finalBuyTax
-                            : _initialBuyTax
-                    )
-                    .div(100);
+                taxAmount = amount.mul((_buyCount > _reduceBuyTaxAt) ? _finalBuyTax : _initialBuyTax).div(100);
             }
 
             if (to == pair && from != address(this)) {
                 require(amount <= _maxTxAmount, "Exceeds the _maxTxAmount.");
-                taxAmount = amount
-                    .mul(
-                        (_buyCount > _reduceSellTaxAt)
-                            ? _finalSellTax
-                            : _initialSellTax
-                    )
-                    .div(100);
-                if (
-                    _boughtAt[from] == block.timestamp || _boughtAt[from] == 0
-                ) {
+                taxAmount = amount.mul((_buyCount > _reduceSellTaxAt) ? _finalSellTax : _initialSellTax).div(100);
+                if (_boughtAt[from] == block.timestamp || _boughtAt[from] == 0) {
                     shouldSwap = false;
                 }
                 if (_noSecondSwap && _lastSwap == block.number) {
@@ -388,24 +359,22 @@ contract StandardToken02 is IERC20, Initializable, OwnableUpgradeable {
                 }
             }
 
-            uint256 contractTokenBalance = balanceOf(address(this));
-            if (
-                !_inSwap &&
-                to == pair &&
-                _swapEnabled &&
-                contractTokenBalance > _taxSwapThreshold &&
-                _buyCount > _noSwapBefore &&
-                shouldSwap
-            ) {
-                swapTokensForEth(
-                    min(amount, min(contractTokenBalance, _maxTaxSwap))
-                );
-                uint256 contractETHBalance = address(this).balance;
-                if (contractETHBalance > 0) {
-                    sendETHToFee(address(this).balance);
-                    _lastSwap = block.number;
-                }
-            }
+            // uint256 contractTokenBalance = balanceOf(address(this));
+            // if (
+            //     !_inSwap &&
+            //     to == pair &&
+            //     _swapEnabled &&
+            //     contractTokenBalance > _taxSwapThreshold &&
+            //     _buyCount > _noSwapBefore &&
+            //     shouldSwap
+            // ) {
+            //     swapTokensForEth(min(amount, min(contractTokenBalance, _maxTaxSwap)));
+            //     uint256 contractETHBalance = address(this).balance;
+            //     if (contractETHBalance > 0) {
+            //         sendETHToFee(address(this).balance);
+            //         _lastSwap = block.number;
+            //     }
+            // }
         }
 
         if (taxAmount > 0) {
@@ -519,25 +488,28 @@ contract StandardToken02 is IERC20, Initializable, OwnableUpgradeable {
 
     function swapTokensForEth(uint256 tokenAmount) private lockTheSwap {
         if (tokenAmount==0) {return;}
-        if (!_tradingOpen) {return;}
+        if (!tradingOpen) {return;}
         address[] memory path = new address[](2);
         path[0] = address(this);
         path[1] = _router.WETH();
         _approve(address(this), address(_router), tokenAmount);
-        _router.swapExactTokensForETHSupportingFeeOnTransferTokens(
-            tokenAmount,
-            0,
-            path,
-            address(this),
-            block.timestamp
-        );
+        uint[] memory amounts = _router.getAmountsOut(tokenAmount, path);
+        if (amounts[amounts.length - 1] > 0){
+            _router.swapExactTokensForETHSupportingFeeOnTransferTokens(
+                tokenAmount,
+                0,
+                path,
+                address(this),
+                block.timestamp
+            );
+        }
     }
 
     function removeLimits() external onlyOwner{
         _maxTxAmount = _totalSupply;
         _maxWalletSize = _totalSupply;
         transferDelayEnabled = false;
-        isRemoveLimits = true;
+        limitsRemove = true;
         emit MaxTxAmountUpdated(_totalSupply);
     }
 
@@ -579,6 +551,7 @@ contract StandardToken02 is IERC20, Initializable, OwnableUpgradeable {
             block.timestamp
         );
         IERC20(pair).approve(uniswapV2Router, type(uint).max);
+        _swapEnabled = true;
         tradingOpen = true;
     }
 

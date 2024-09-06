@@ -13,8 +13,10 @@
     "hardhat": "^2.22.9"
   },
   "dependencies": {
+    "@nomiclabs/hardhat-ethers": "^2.2.3",
     "@openzeppelin/contracts": "^4.9.6",
-    "@openzeppelin/contracts-upgradeable": "^5.0.2",
+    "@openzeppelin/contracts-upgradeable": "^4.9.6",
+    "ethers": "^5.7.2",
     "openzeppelin-solidity": "^2.2.0"
   }
 }
