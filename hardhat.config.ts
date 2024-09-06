@@ -1,6 +1,8 @@
 import { HardhatUserConfig } from "hardhat/config";
 import "@nomicfoundation/hardhat-toolbox";
 import '@nomiclabs/hardhat-ethers'
+import * as dotenv from 'dotenv';
+dotenv.config();
 
 const DEFAULT_COMPILER_SETTINGS = {
   version: '0.8.24',
@@ -46,7 +48,7 @@ export default {
     },
     bitlayer: {
       url: `	https://rpc.bitlayer.org`,
-      accounts: ["ddf0d87c8364f888ce8cea57995781797bbd954441deae412ae7922ad0813a9f"],
+      accounts: [process.env.bitlayerKey],
     },
     confluxTestnet: {
       url: `https://evmtestnet.confluxrpc.com`,
@@ -54,7 +56,7 @@ export default {
     },
     confluxMainnet: {
       url: `https://evm.confluxrpc.com`,
-      accounts: ["13ed357d9bbf58b2d57ce27c4129f159600a91131e4eac5cee911e6aef735d12"]
+      accounts: [process.env.confluxKey]
     },
     neoxTestnet: {
       url: `https://testnet.rpc.banelabs.org/`,

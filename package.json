@@ -16,6 +16,7 @@
     "@nomiclabs/hardhat-ethers": "^2.2.3",
     "@openzeppelin/contracts": "^4.9.6",
     "@openzeppelin/contracts-upgradeable": "^4.9.6",
+    "dotenv": "^16.4.5",
     "ethers": "^5.7.2",
     "openzeppelin-solidity": "^2.2.0"
   }

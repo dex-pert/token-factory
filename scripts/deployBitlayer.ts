@@ -5,25 +5,26 @@
 // will compile your contracts, add the Hardhat Runtime Environment's members to the
 
 import { ethers } from "hardhat";
-import { abi } from "../artifacts/contracts/StandardToken02.sol/StandardToken02.json"
 
 // global scope, and execute the script.
 const hre = require("hardhat");
 
 async function main() {
+
   // const StandardToken01 = await hre.ethers.getContractFactory("StandardToken01");
   // const standardToken01 = await StandardToken01.deploy();
   // const standardToken01Address = standardToken01.address
   // console.log("standardTokenAddress 01:", standardToken01Address)
-const standardToken01Address = "0x5e57b4e054A058CD3f69d7626eAe6ba2c1df8162"
+const standardToken01Address = "0x79B861477012D127a9DE00CA8f0ceD28212aa954"
 
   // const TokenFactoryManager = await hre.ethers.getContractFactory("TokenFactoryManager");
   // const tokenFactoryManager = await TokenFactoryManager.deploy();
   // const tokenFactoryManagerAddress = tokenFactoryManager.address
   // console.log("tokenFactoryManagerAddress:", tokenFactoryManagerAddress)
-const tokenFactoryManagerAddress = "0xd12edb3B94f6Adfed3E223ABb9d95C6AC0C46175"
+const tokenFactoryManagerAddress = "0xAB255ECA00D1816f35FED0cdebeA5A4C26C7C311"
 
   const feeToAddress = "0x7002421C457b83425293DE5a7BFEB68B01A6f693"
+
 
   // 0x87C0C18C01E425CDc5223291a8c7c1Aa5b9C9a49
   const StandardTokenFactory01 = await hre.ethers.getContractFactory("StandardTokenFactory01");
