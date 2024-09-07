@@ -68,7 +68,7 @@ export default {
     },
     fiveire: {
       url: 'https://rpc.5ire.network',
-      accounts: ["0x418776e270e22baa51cc1ac0919333ce84ab17e7135303b6aa988e934abac940"]
+      accounts: [process.env.bitlayerKey]
     },
   },
   namedAccounts: {
@@ -91,7 +91,7 @@ export default {
       sepolia: 'QEAE2M96IB94MVPUN7ESQEBNI416F1EWRR',
       bitLayerTestnet: "1234",
       bitlayer:"123",
-      ire: "ire",
+      fiveire: "fiveire",
       confluxTestnet: 'espace',
       confluxMainnet: 'espace',
       neoxTestnet: "123"
@@ -114,11 +114,11 @@ export default {
         }
       },
       {
-        network: "ire",
-        chainId: 997,
+        network: "fiveire",
+        chainId: 995,
         urls: {
-          apiURL: "https://contract.evm.scan.qa.5ire.network/5ire/verify",
-          browserURL: "https://scan.qa.5ire.network",
+          apiURL: "https://api.evm.scan.5ire.network",
+          browserURL: "https://5irescan.io"
         }
       },
         {
