@@ -27,8 +27,8 @@ import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 import { EnumerableSet } from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 import { IFactoryManager, TokenMetaData } from "../interfaces/IFactoryManager.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import { IUniswapV2Router02 } from "../interfaces/IUniswapV2Router02.sol";
-import { IUniswapV2Factory } from "../interfaces/IUniswapV2Factory.sol";
+import { IRouter02 } from "../interfaces/IRouter02.sol";
+import { IFactory } from "../interfaces/IFactory.sol";
 
 contract TokenFactoryManager is Ownable, IFactoryManager {
     using EnumerableSet for EnumerableSet.AddressSet;
@@ -248,12 +248,12 @@ contract TokenFactoryManager is Ownable, IFactoryManager {
         
         IERC20(token).approve(_uniswapV2Router, tokenAmount);
         require(tokenAmount <=  IERC20(token).totalSupply(), "Token amount exceeds total supply");
-        IUniswapV2Router02 router = IUniswapV2Router02(_uniswapV2Router);
-        IUniswapV2Factory factory=IUniswapV2Factory(router.factory());
-        address pair = factory.getPair(token, router.WETH());
+        IRouter02 router = IRouter02(_uniswapV2Router);
+        IFactory factory = IFactory(router.factory());
+        address pair = factory.getPair(token, router.WBTC());
         // Create pair if it doesn't exist
         if(pair==address(0x0)){
-          pair = factory.createPair(token, router.WETH());
+          pair = factory.createPair(token, router.WBTC());
         }
 
         // Add liquidity

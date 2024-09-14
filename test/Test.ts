@@ -35,7 +35,7 @@ describe("Lock", function () {
     const [owner, otherAccount]: any = await ethers.getSigners();
 
     const TokenFactoryManager = await hre.ethers.getContractFactory("TokenFactoryManager");
-    const tokenFactoryManager = await TokenFactoryManager.deploy("0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D");
+    const tokenFactoryManager = await TokenFactoryManager.deploy("0xB0Cc30795f9E0125575742cFA8e73D20D9966f81");
 
     const StandardToken01 = await hre.ethers.getContractFactory("StandardToken01");
     const standardToken01 = await StandardToken01.deploy();
