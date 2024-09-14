@@ -24,9 +24,11 @@ async function main() {
   //neox
   // const uniswapV2RouterAddress = "0x82b56Dd9c7FD5A977255BA51B96c3D97fa1Af9A9"
   //bitlayer
-  const uniswapV2RouterAddress = "0xB0Cc30795f9E0125575742cFA8e73D20D9966f81"
+  // const uniswapV2RouterAddress = "0xB0Cc30795f9E0125575742cFA8e73D20D9966f81"
   //eth
   // const uniswapV2RouterAddress = "0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D"
+  //eth
+  const uniswapV2RouterAddress = "0xb22cE52905d25987321d6BF73d1705886f1Cc4F4"
   const tokenFactoryManager = await TokenFactoryManager.deploy(uniswapV2RouterAddress);
   const tokenFactoryManagerAddress = tokenFactoryManager.address
   console.log("tokenFactoryManagerAddress:", tokenFactoryManagerAddress)

@@ -37,7 +37,7 @@ export default {
       accounts: [process.env.deployKey]
     },
     sepolia: {
-      url: `https://rpc.sepolia.org`,
+      url: `https://eth-sepolia.g.alchemy.com/v2/gOeoBV9mlFL1pWj7qbKEdlB6pXTfNum6`,
       accounts: ["8dbc9d7b924b00532e6fc1295fd120886d3d3576ef9ac9de78335de33c28b095"]
     },
     base: {
