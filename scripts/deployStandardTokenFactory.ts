@@ -5,23 +5,31 @@
 // will compile your contracts, add the Hardhat Runtime Environment's members to the
 
 import { ethers } from "hardhat";
-import { abi } from "../artifacts/contracts/StandardToken02.sol/StandardToken02.json"
 
 // global scope, and execute the script.
 const hre = require("hardhat");
 
 async function main() {
+  const feeData = await ethers.provider.getFeeData();
   const StandardToken01 = await hre.ethers.getContractFactory("StandardToken01");
   const standardToken01 = await StandardToken01.deploy();
   const standardToken01Address = standardToken01.address
   console.log("standardTokenAddress 01:", standardToken01Address)
 
   const TokenFactoryManager = await hre.ethers.getContractFactory("TokenFactoryManager");
-  const tokenFactoryManager = await TokenFactoryManager.deploy();
+  //manta
+  // const uniswapV2RouterAddress = "0xA3C957B20779Abf06661E25eE361Be1430ef1038"
+  //conflux
+  // const uniswapV2RouterAddress = "0x62b0873055bf896dd869e172119871ac24aea305"
+  //neox
+  // const uniswapV2RouterAddress = "0x82b56Dd9c7FD5A977255BA51B96c3D97fa1Af9A9"
+  //bitlayer
+  const uniswapV2RouterAddress = "0xB0Cc30795f9E0125575742cFA8e73D20D9966f81"
+  //eth
+  // const uniswapV2RouterAddress = "0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D"
+  const tokenFactoryManager = await TokenFactoryManager.deploy(uniswapV2RouterAddress);
   const tokenFactoryManagerAddress = tokenFactoryManager.address
   console.log("tokenFactoryManagerAddress:", tokenFactoryManagerAddress)
-  const gasEstimateTokenFactoryManager = await hre.ethers.provider.estimateGas(TokenFactoryManager.getDeployTransaction());
-console.log("TokenFactoryManager 部署的 Gas 预估:", gasEstimateTokenFactoryManager.toString());
 
   const feeToAddress = "0x7002421C457b83425293DE5a7BFEB68B01A6f693"
   const StandardTokenFactory01 = await hre.ethers.getContractFactory("StandardTokenFactory01");
@@ -31,12 +39,6 @@ console.log("TokenFactoryManager 部署的 Gas 预估:", gasEstimateTokenFactory
     feeToAddress,
     "100000000000000000000000000");
 
-  const gasEstimateStandardTokenFactory01 = await hre.ethers.provider.estimateGas(StandardTokenFactory01.getDeployTransaction(
-    tokenFactoryManagerAddress,
-    standardToken01Address,
-    feeToAddress,
-    "100000000000000000000000000"))
-  console.log("StandardTokenFactory01 部署的 Gas 预估:", gasEstimateStandardTokenFactory01.toString());
   const standardTokenFactory01Address = standardTokenFactory01.address
   console.log("standardTokenFactoryAddress 01:", standardTokenFactory01Address)
  
@@ -46,8 +48,8 @@ console.log("TokenFactoryManager 部署的 Gas 预估:", gasEstimateTokenFactory
   await standardTokenFactory01.setFee(2, "100000000000000000")
 
   //btc
-  // await standardTokenFactory01.setFee(1, "20000000000000000")
-  // await standardTokenFactory01.setFee(2, "10000000000000000")
+  // await standardTokenFactory01.setFee(1, "2000000000000000")
+  // await standardTokenFactory01.setFee(2, "1000000000000000")
 
   await tokenFactoryManager.addTokenFactory(standardTokenFactory01Address);
   // await tokenFactoryManager.addTokenFactory(standardTokenFactory02Address);
@@ -61,7 +63,7 @@ console.log("TokenFactoryManager 部署的 Gas 预估:", gasEstimateTokenFactory
 
   await hre.run("verify:verify", {
     address: tokenFactoryManagerAddress,
-    constructorArguments: [],
+    constructorArguments: [uniswapV2RouterAddress],
     force: true,
   });
 
