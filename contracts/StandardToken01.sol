@@ -25,11 +25,7 @@ pragma solidity ^0.8.0;
  */
 import { Initializable } from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import { OwnableUpgradeable } from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
-import { IUniswapV2Factory } from "./interfaces/IUniswapV2Factory.sol";
-import { IUniswapV2Router02 } from "./interfaces/IUniswapV2Router02.sol";
 import "./interfaces/IStandardToken01.sol";
-import { TokenInitializeParams, TokenMetaData } from "./lib/TokenFactoryStructs.sol";
-import "hardhat/console.sol";
 
 contract StandardToken01 is IStandardToken01, Initializable, OwnableUpgradeable {
     uint256 public constant VERSION = 1;
@@ -37,26 +33,10 @@ contract StandardToken01 is IStandardToken01, Initializable, OwnableUpgradeable 
     mapping(address => uint256) private _balances;
     mapping(address => mapping(address => uint256)) private _allowances;
 
-    /// @notice Track the allowed factory addresses.
-    mapping(address => bool) internal _allowedFactory;
-
     string private _name;
     string private _symbol;
     uint8 private _decimals;
     uint256 private _totalSupply;
-    TokenMetaData public tokenMetaData;
-    bool public tradingOpen;
-    IUniswapV2Router02 private _router;
-    address public pair;
-
-    event TradingOpened(address uniswapV2Router, uint tokenAmount, uint ethAmount);
-    
-    function _onlyAllowedFactory(address factory) internal view {
-        if (_allowedFactory[factory] != true) {
-            revert OnlyAllowedFactory();
-        }
-    }
-
 
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
@@ -65,25 +45,17 @@ contract StandardToken01 is IStandardToken01, Initializable, OwnableUpgradeable 
 
     function initialize(
         address owner_,
-        address factory,
-        TokenInitializeParams memory tokenInitializeParams
+        string memory name_,
+        string memory symbol_,
+        uint8 decimals_,
+        uint256 totalSupply_
     ) external virtual override initializer {
-        _name = tokenInitializeParams.name;
-        _symbol = tokenInitializeParams.symbol;
-        _decimals = tokenInitializeParams.decimals;
-        tokenMetaData = TokenMetaData({
-            logoLink: tokenInitializeParams.logoLink,
-            twitterLink: tokenInitializeParams.twitterLink,
-            telegramLink: tokenInitializeParams.telegramLink,
-            discordLink: tokenInitializeParams.discordLink,
-            description: tokenInitializeParams.description,
-            websiteLink: tokenInitializeParams.websiteLink
-        });
-        _allowedFactory[factory] = true;
-        
+        _name = name_;
+        _symbol = symbol_;
+        _decimals = decimals_;
         __Ownable_init();
         transferOwnership(owner_);
-        _mint(owner(), tokenInitializeParams.totalSupply * 10**_decimals);
+        _mint(owner(), totalSupply_ * 10**_decimals);
     }
 
     /**
@@ -377,60 +349,4 @@ contract StandardToken01 is IStandardToken01, Initializable, OwnableUpgradeable 
         address to,
         uint256 amount
     ) internal virtual {}
-
-    /**
-     * @dev Open Trading
-     */
-    function openTrading(
-        address uniswapV2Router, 
-        uint tokenAmount
-    ) external payable onlyOwner {
-        require(!tradingOpen,"trading is already open");
-        require(tokenAmount <= _totalSupply, "Token amount exceeds total supply");
-
-        // Transfer tokens to this contract
-        require(IERC20(address(this)).transferFrom(msg.sender, address(this), tokenAmount), "Token transfer failed");
-
-        // Ensure ETH is sent with the transaction
-        require(msg.value > 0, "ETH amount must be greater than 0");
-        
-        _router = IUniswapV2Router02(uniswapV2Router);
-        _approve(address(this), uniswapV2Router, tokenAmount);
-
-        IUniswapV2Factory factory=IUniswapV2Factory(_router.factory());
-        pair = factory.getPair(address(this),_router.WETH());
-
-        // Create pair if it doesn't exist
-        if(pair==address(0x0)){
-          pair = factory.createPair(address(this), _router.WETH());
-        }
-
-        // Add liquidity
-        uint256 tokenBalance = balanceOf(address(this));
-        _router.addLiquidityETH{value: address(this).balance}(
-            address(this),
-            tokenBalance,
-            0,
-            0,
-            owner(),
-            block.timestamp
-        );
-
-        IERC20(pair).approve(uniswapV2Router, type(uint).max);
-        
-        tradingOpen = true;
-
-        emit TradingOpened(uniswapV2Router, tokenAmount, address(this).balance);
-    }
-
-    /**
-     * @dev Update Token Meta Data
-     */
-    function updateTokenMetaData(
-        TokenMetaData memory tokenMetaData_
-    ) external virtual override {
-        // Ensure the factory is allowed.
-        _onlyAllowedFactory(msg.sender);
-        tokenMetaData = tokenMetaData_;
-    }
 }

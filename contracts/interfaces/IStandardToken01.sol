@@ -24,18 +24,15 @@ pragma solidity ^0.8.0;
  * 🚀 Unleash the power of decentralized finances and tokenization with Dexpert Token Creator. Customize your token seamlessly. Manage your created tokens conveniently from your user panel - start creating your dream token today!
  */
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import { TokenInitializeParams, TokenMetaData } from "../lib/TokenFactoryStructs.sol";
 
 interface IStandardToken01 is IERC20 {
 
     function initialize(
         address owner_,
-        address factory,
-        TokenInitializeParams memory tokenInitializeParams
-    ) external;
-
-    function updateTokenMetaData(
-        TokenMetaData memory tokenMetaData_
+        string memory name_,
+        string memory symbol_,
+        uint8 decimals_,
+        uint256 totalSupply_
     ) external;
 
     /**

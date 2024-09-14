@@ -35,20 +35,17 @@ describe("Lock", function () {
     const [owner, otherAccount]: any = await ethers.getSigners();
 
     const TokenFactoryManager = await hre.ethers.getContractFactory("TokenFactoryManager");
-    const tokenFactoryManager = await TokenFactoryManager.deploy();
+    const tokenFactoryManager = await TokenFactoryManager.deploy("0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D");
 
     const StandardToken01 = await hre.ethers.getContractFactory("StandardToken01");
     const standardToken01 = await StandardToken01.deploy();
 
-    const StandardToken02 = await hre.ethers.getContractFactory("StandardToken02");
-    const standardToken02 = await StandardToken02.deploy();
 
     const feeToAddress = "0xD3952283B16C813C6cE5724B19eF56CBEE0EaA89"
     const StandardTokenFactory01 = await hre.ethers.getContractFactory("StandardTokenFactory01");
 
     const tokenFactoryManagerAddress = await tokenFactoryManager.address
     const standardToken01Address = await standardToken01.address
-    const standardToken02Address = await standardToken02.address
     const standardTokenFactory01 = await StandardTokenFactory01.deploy(
       tokenFactoryManagerAddress,
       standardToken01Address,
@@ -56,73 +53,103 @@ describe("Lock", function () {
       "100000000000000000000000000"
     );
 
-    const StandardTokenFactory02 = await hre.ethers.getContractFactory("StandardTokenFactory02");
-    const standardTokenFactory02 = await StandardTokenFactory02.deploy(
-      tokenFactoryManagerAddress,
-      standardToken02Address,
-      feeToAddress,
-      // "300000000000000000",
-      // "300000000000000000",
-      "100000000000000000000000000"
-    );
-
-    await standardTokenFactory02.connect(owner).setLevels([0, 1, 2])
-    await standardTokenFactory02.connect(owner).setFee(0, 0)
-    await standardTokenFactory02.connect(owner).setFee(1, "100000000000000000")
-    await standardTokenFactory02.connect(owner).setFee(2, "300000000000000000")
-
     await standardTokenFactory01.connect(owner).setLevels([0, 1, 2])
     await standardTokenFactory01.connect(owner).setFee(0, 0)
     await standardTokenFactory01.connect(owner).setFee(1, "100000000000000000")
     await standardTokenFactory01.connect(owner).setFee(2, "300000000000000000")
 
     const levels1 = await standardTokenFactory01.connect(owner).getLevels();
-    const levels2 = await standardTokenFactory02.connect(owner).getLevels();
     const fee0 = await standardTokenFactory01.connect(owner).fees(0)
     const fee1 = await standardTokenFactory01.connect(owner).fees(1)
     console.log("levels 1:", levels1)
-    console.log("levels 2:", levels2)
     console.log("fee 0:", fee0)
     console.log("fee 1:", fee1)
     console.log("owner:", owner.address)
     console.log("otherAccount:", otherAccount.address)
-    return { standardToken01, standardToken02, tokenFactoryManager, standardTokenFactory01, standardTokenFactory02, owner, otherAccount };
+    return { standardToken01, tokenFactoryManager, standardTokenFactory01, owner, otherAccount };
   }
 
   describe("standardTokenFactory01", function () {
     it("level 0", async function () {
-      const { standardToken01, standardToken02, tokenFactoryManager, standardTokenFactory01, standardTokenFactory02, owner, otherAccount } = await loadFixture(deployOneYearLockFixture);
+      const { standardToken01, tokenFactoryManager, standardTokenFactory01, owner, otherAccount } = await loadFixture(deployOneYearLockFixture);
 
       await tokenFactoryManager.addTokenFactory(standardTokenFactory01.address);
-      await tokenFactoryManager.addTokenFactory(standardTokenFactory02.address);
       const name = "name"
       const symbol = "symbol"
       const decimals = 18
       const totalSupply = 1000000000
       await standardTokenFactory01.connect(owner).create(
         0,
+        name,
+        symbol,
+        decimals,
+        totalSupply,
         {
-          name: name,
-          symbol: symbol,
-          decimals: decimals,
-          totalSupply: totalSupply,
           description: "",
-          logoLink: "",
-          twitterLink: "",
-          telegramLink: "",
-          discordLink: "",
-          websiteLink: ""
+          logo: "",
+          twitter: "",
+          telegram: "",
+          discord: "",
+          website: ""
         },
         { value: hre.ethers.utils.parseEther("0.3") }
       );
-      const tokens = await tokenFactoryManager.getTokens(owner.address, 0, 1)
+      await standardTokenFactory01.connect(owner).create(
+        0,
+        name + "1",
+        symbol,
+        decimals,
+        totalSupply,
+        {
+          description: "",
+          logo: "",
+          twitter: "",
+          telegram: "",
+          discord: "",
+          website: ""
+        },
+        { value: hre.ethers.utils.parseEther("0.3") }
+      );
+      const tokens = await tokenFactoryManager.getTokens(owner.address, 0, 2)
+      const tokenA = await tokenFactoryManager.getTokensByType(owner.address, 0, 0, 2)
+      console.log("token a:", tokenA)
+      const a = await tokenFactoryManager.getTokensCountByType(owner.address, 0)
+      console.log("a:", a)
       const tokenLength = await tokenFactoryManager.getTokensCount(owner.address);
-      const token: any = tokens[0][0]
-      const tokenContract: any = new ethers.Contract(token, StandardTokenJSON.abi)
+      console.log("tokenLength:",tokenLength)
+      const token: any = tokens
+      console.log("token[0].tokenAddress:",token[0].tokenAddress)
+      const tokenAddress = token[0].tokenAddress
+      const tokenContract: any = new ethers.Contract(tokenAddress, StandardTokenJSON.abi)
       // console.log("tokenContract:",tokenContract)
-      await tokenContract.connect(owner).approve(token, totalSupply)
+      await tokenContract.connect(owner).approve(standardTokenFactory01.address, totalSupply)
+      // await tokenContract.connect(owner).approve(tokenFactoryManager.address, totalSupply)
+      // await tokenContract.connect(owner).approve("0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D", totalSupply)
+      console.log("owner address")
       // await tokenContract.connect(owner).openTrading("0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D", totalSupply, { value: hre.ethers.utils.parseEther("1") })
-      await tokenContract.connect(owner).openTrading("0xB0Cc30795f9E0125575742cFA8e73D20D9966f81", totalSupply, { value: hre.ethers.utils.parseEther("1") })
+      await standardTokenFactory01.connect(owner).openTrading(tokenAddress, totalSupply, { value: hre.ethers.utils.parseEther("1") })
+      let tokens1 = await tokenFactoryManager.getTokens(owner.address, 0, 2)
+      console.log("tokens1:",tokens1)
+      let tokenAb = await tokenFactoryManager.getTokensByType(owner.address, 0, 0, 2)
+      console.log("token a:", tokenAb)
+      let abc = await tokenFactoryManager.getTokenByAddress(owner.address, tokenAddress)
+      console.log("token a:", abc)
+
+      await standardTokenFactory01.connect(owner).updateTokenMetaData(0, tokenAddress, {
+        description: "1",
+          logo: "2",
+          twitter: "3",
+          telegram: "4",
+          discord: "5",
+          website: "6"
+      })
+      tokens1 = await tokenFactoryManager.getTokens(owner.address, 0, 2)
+      console.log("tokens1:",tokens1)
+      tokenAb = await tokenFactoryManager.getTokensByType(owner.address, 0, 0, 2)
+      console.log("token a:", tokenAb)
+      abc = await tokenFactoryManager.getTokenByAddress(owner.address, tokenAddress)
+      console.log("token a:", abc)
+      return;
       console.log("----------updateTokenMetaData-----------")
       console.log(standardTokenFactory01.address)
       // await tokenContract.connect(otherAccount).updateTokenMetaData({

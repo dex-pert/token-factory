@@ -27,8 +27,9 @@ import { Clones } from "@openzeppelin/contracts/proxy/Clones.sol";
 import { Address } from "@openzeppelin/contracts/utils/Address.sol";
 import { TokenFactoryBase } from "./TokenFactoryBase.sol";
 import "../interfaces/IStandardToken01.sol";
-import { TokenInitializeParams, TokenMetaData } from "../lib/TokenFactoryStructs.sol";
 import "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
+import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import { IFactoryManager, TokenMetaData } from "../interfaces/IFactoryManager.sol";
 
 contract StandardTokenFactory01 is TokenFactoryBase {
     using Address for address payable;
@@ -60,7 +61,11 @@ contract StandardTokenFactory01 is TokenFactoryBase {
 
     function create(
         uint256 level,
-        TokenInitializeParams calldata tokenInitializeParams
+        string memory name,
+        string memory symbol,
+        uint8 decimals,
+        uint256 totalSupply,
+        TokenMetaData memory metaData
     ) external payable enoughFee(level) nonReentrant returns (address token) {
         // Ensure msg.sender is an externally owned account (EOA) and not a contract
         require(!Address.isContract(msg.sender), "Contracts are not allowed");
@@ -70,13 +75,15 @@ contract StandardTokenFactory01 is TokenFactoryBase {
         if (fees[level] > 0){
             Address.sendValue(payable(feeTo), fees[level]);
         }
-        token = Clones.cloneDeterministic(implementation, keccak256(abi.encodePacked(msg.sender, tokenInitializeParams.name, tokenInitializeParams.symbol, tokenInitializeParams.decimals, tokenInitializeParams.totalSupply)));
+        token = Clones.cloneDeterministic(implementation, keccak256(abi.encodePacked(msg.sender, name, symbol, decimals, totalSupply)));
         IStandardToken01(token).initialize(
             msg.sender,
-            address(this),
-            tokenInitializeParams
+            name,
+            symbol,
+            decimals,
+            totalSupply
         );
-        assignTokenToOwner(msg.sender, token, 0);
+        assignTokenToOwner(msg.sender, token, 0, name, symbol, totalSupply, decimals, metaData);
         _tokenOwnerAddresses[token] = msg.sender;
         emit TokenCreated(msg.sender, token, 0, implementationVersion, level);
     }
@@ -103,7 +110,7 @@ contract StandardTokenFactory01 is TokenFactoryBase {
     function updateTokenMetaData(
         uint256 level,
         address token, 
-        TokenMetaData memory tokenMetaData_
+        TokenMetaData memory metaData_
     ) external payable enoughFee(level) nonReentrant {
         _onlyTokenOwner(token);
 
@@ -113,10 +120,29 @@ contract StandardTokenFactory01 is TokenFactoryBase {
             Address.sendValue(payable(feeTo), fees[level]);
         }
 
-        IStandardToken01(token).updateTokenMetaData(
-            tokenMetaData_
+        updateTokenData(
+            msg.sender,
+            token,
+            metaData_
         );
         
-        emit TokenMetaDataUpdated(tokenMetaData_);
+        emit TokenMetaDataUpdated(msg.sender, token, metaData_);
+    }
+
+    function openTrading(
+        address token,
+        uint tokenAmount
+    ) external payable nonReentrant {
+        _onlyTokenOwner(token);
+
+        IERC20(token).transferFrom(msg.sender, FACTORY_MANAGER, tokenAmount);
+
+        IFactoryManager(FACTORY_MANAGER).openTrading{value: msg.value}(
+            msg.sender,
+            token,
+            tokenAmount
+        );
+        
+        emit TradingOpened(msg.sender, token, tokenAmount, msg.value);
     }
 }

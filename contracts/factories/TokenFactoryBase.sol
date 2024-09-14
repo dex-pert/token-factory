@@ -26,8 +26,7 @@ pragma solidity ^0.8.0;
 import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 import { Address } from "@openzeppelin/contracts/utils/Address.sol";
 import { ReentrancyGuard } from "@openzeppelin/contracts/security/ReentrancyGuard.sol";
-import { IFactoryManager } from "../interfaces/IFactoryManager.sol";
-import { TokenMetaData } from "../lib/TokenFactoryStructs.sol";
+import { IFactoryManager, TokenMetaData } from "../interfaces/IFactoryManager.sol";
 
 contract TokenFactoryBase is Ownable, ReentrancyGuard {
     using Address for address payable;
@@ -48,7 +47,8 @@ contract TokenFactoryBase is Ownable, ReentrancyGuard {
     );
     event FeeToUpdated(address newFeeTo);
     event FeeUpdated(uint256 level, uint256 newFee);
-    event TokenMetaDataUpdated(TokenMetaData tokenMetaData);
+    event TokenMetaDataUpdated(address owner, address token, TokenMetaData metaData);
+    event TradingOpened(address sender, address token, uint tokenAmount, uint ethAmount);
     event LevelsUpdated(uint256[] newLevels);
     error InvalidFactoryManager(address implementation);
     error InvalidImplementation(address factoryManager);
@@ -111,12 +111,22 @@ contract TokenFactoryBase is Ownable, ReentrancyGuard {
     function assignTokenToOwner(
         address owner,
         address token,
-        uint8 tokenType
+        uint8 tokenType,
+        string memory name,
+        string memory symbol,
+        uint256 totalSupply,
+        uint8 decimals,
+        TokenMetaData memory metaData
     ) internal {
         IFactoryManager(FACTORY_MANAGER).assignTokensToOwner(
             owner,
             token,
-            tokenType
+            tokenType,
+            name,
+            symbol,
+            totalSupply,
+            decimals,
+            metaData
         );
     }
 
@@ -125,5 +135,17 @@ contract TokenFactoryBase is Ownable, ReentrancyGuard {
         if (refund > 0) {
             Address.sendValue(payable(msg.sender),refund);
         }
+    }
+
+    function updateTokenData(
+        address owner,
+        address token,
+        TokenMetaData memory metaData
+    ) internal {
+        IFactoryManager(FACTORY_MANAGER).updateTokenData(
+            owner,
+            token,
+            metaData
+        );
     }
 }

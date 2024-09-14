@@ -2,6 +2,7 @@ import { HardhatUserConfig } from "hardhat/config";
 import "@nomicfoundation/hardhat-toolbox";
 import '@nomiclabs/hardhat-ethers'
 import * as dotenv from 'dotenv';
+import { ethers } from "hardhat";
 dotenv.config();
 
 const DEFAULT_COMPILER_SETTINGS = {
@@ -27,13 +28,13 @@ export default {
       allowUnlimitedContractSize: false,
       chainId: 1,
       forking: {
-        // url: `https://eth-mainnet.g.alchemy.com/v2/kNPJaYqMx7BA9TcDDJQ8pS5WcLqXGiG7`,
-        url: `https://rpc.bitlayer.org`,
+        url: `https://eth-mainnet.g.alchemy.com/v2/kNPJaYqMx7BA9TcDDJQ8pS5WcLqXGiG7`,
+        // url: `https://rpc.bitlayer.org`,
       },
     },
     mainnet: {
       url: `https://1rpc.io/eth`,
-      accounts: ["8dbc9d7b924b00532e6fc1295fd120886d3d3576ef9ac9de78335de33c28b095"]
+      accounts: [process.env.deployKey]
     },
     sepolia: {
       url: `https://rpc.sepolia.org`,
@@ -57,7 +58,7 @@ export default {
     },
     confluxMainnet: {
       url: `https://evm.confluxrpc.com`,
-      accounts: ["13ed357d9bbf58b2d57ce27c4129f159600a91131e4eac5cee911e6aef735d12"]
+      accounts: [process.env.confluxKey]
     },
     neoxTestnet: {
       url: `https://testnet.rpc.banelabs.org/`,
@@ -69,8 +70,16 @@ export default {
     },
     fiveire: {
       url: 'https://rpc.5ire.network',
-      accounts: ["0x418776e270e22baa51cc1ac0919333ce84ab17e7135303b6aa988e934abac940"]
+      accounts: [process.env.deployKey]
     },
+    neox: {
+      url: 'https://mainnet-1.rpc.banelabs.org',
+      accounts: [process.env.deployKey],
+    },
+    mantaMainnet: {
+      url: "https://manta-pacific.drpc.org",
+      accounts: [process.env.deployKey]
+    }
   },
   namedAccounts: {
     deployer: 0,
@@ -88,14 +97,16 @@ export default {
   },
   etherscan: {
     apiKey: {
-      goerli: 'QEAE2M96IB94MVPUN7ESQEBNI416F1EWRR',
+      mainnet: 'QEAE2M96IB94MVPUN7ESQEBNI416F1EWRR',
       sepolia: 'QEAE2M96IB94MVPUN7ESQEBNI416F1EWRR',
       bitLayerTestnet: "1234",
       bitlayer:"123",
-      ire: "ire",
+      fiveire: "fiveire",
       confluxTestnet: 'espace',
       confluxMainnet: 'espace',
-      neoxTestnet: "123"
+      neoxTestnet: "123",
+      neox: "neox",
+      mantaMainnet: "test",
     },
     customChains: [
       {
@@ -115,12 +126,13 @@ export default {
         }
       },
       {
-        network: "ire",
-        chainId: 997,
+        network: "fiveire",
+        chainId: 995,
         urls: {
-          apiURL: "https://contract.evm.scan.qa.5ire.network/5ire/verify",
-          browserURL: "https://scan.qa.5ire.network",
+          apiURL: "https://api.evm.scan.5ire.network",
+          browserURL: "https://5irescan.io"
         }
+
       },
         {
           network: 'confluxTestnet',
@@ -144,6 +156,22 @@ export default {
           urls: {
             apiURL: 'https://evmapi.confluxscan.io/api/',
             browserURL: 'https://xt4scan.ngd.network',
+          },
+        },
+        {
+          network: "neox",
+          chainId: 47763,
+          urls: {
+            apiURL: "https://xexplorer.neo.org/api",
+            browserURL: "https://xexplorer.neo.org/"
+          }
+        },
+        {
+          network: "mantaMainnet",
+          chainId: 169,
+          urls: {
+            apiURL: "https://manta-pacific.calderaexplorer.xyz/api",
+            browserURL: "https://manta-pacific.calderaexplorer.xyz",
           },
         },
     ]
