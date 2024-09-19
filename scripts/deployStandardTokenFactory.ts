@@ -24,9 +24,11 @@ async function main() {
   //neox
   // const uniswapV2RouterAddress = "0x82b56Dd9c7FD5A977255BA51B96c3D97fa1Af9A9"
   //bitlayer
-  const uniswapV2RouterAddress = "0xB0Cc30795f9E0125575742cFA8e73D20D9966f81"
+  // const uniswapV2RouterAddress = "0xB0Cc30795f9E0125575742cFA8e73D20D9966f81"
   //eth
   // const uniswapV2RouterAddress = "0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D"
+  //bitlayer test
+  const uniswapV2RouterAddress = "0xA16fC83947D26f8a16cA02DC30D95Af5440C38AD"
   const tokenFactoryManager = await TokenFactoryManager.deploy(uniswapV2RouterAddress);
   const tokenFactoryManagerAddress = tokenFactoryManager.address
   console.log("tokenFactoryManagerAddress:", tokenFactoryManagerAddress)
@@ -44,12 +46,12 @@ async function main() {
  
   await standardTokenFactory01.setLevels([0, 1, 2])
   //eth
-  await standardTokenFactory01.setFee(1, "200000000000000000")
-  await standardTokenFactory01.setFee(2, "100000000000000000")
+  // await standardTokenFactory01.setFee(1, "200000000000000000")
+  // await standardTokenFactory01.setFee(2, "100000000000000000")
 
   //btc
-  // await standardTokenFactory01.setFee(1, "2000000000000000")
-  // await standardTokenFactory01.setFee(2, "1000000000000000")
+  await standardTokenFactory01.setFee(1, "200000000000000")
+  await standardTokenFactory01.setFee(2, "100000000000000")
 
   await tokenFactoryManager.addTokenFactory(standardTokenFactory01Address);
   // await tokenFactoryManager.addTokenFactory(standardTokenFactory02Address);
